@@ -1,7 +1,7 @@
 # docassemble-calendly
 Example integration 
 
-CC 0 licens
+CC0 license
 
 Change the URL within the source code to your own calendly url.
 
