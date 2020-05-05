@@ -1,0 +1,87 @@
+---
+metadata: 
+  title: |
+    Docassemble Calendly Integration Example
+  description: |
+    Just an example of how one might integrate a calendly widget into a docassemble interview. 
+  authors:
+    - name: Alexander Clark
+      organization: Metatheria, LLC
+  revision_date: 2020-05-05
+---
+features:
+  javascript: 
+    - https://assets.calendly.com/assets/external/widget.js
+---
+mandatory: true
+code: |
+  name
+  user_scheduled_interview
+  all_done
+---
+question: |
+  Contact Info
+subquestion: |
+  Please enter your name and email address.
+fields:
+  - Name: name
+  - Email: email
+---
+question: |
+  Scheduling
+subquestion: |
+  We will need to schedule a time for you to talk with our staff. Please choose a time below, enter your contact info and click the continue button once finished. <br>
+  <!-- Calendly inline widget begin -->
+  <div class="calendly-inline-widget" style="min-width:320px;height:580px;" data-auto-load="false">
+  <script>
+​
+  </script>
+  </div>
+  <!-- Calendly inline widget end -->
+continue button field: user_scheduled_interview
+script: | 
+  <script>
+    // hide the docassemble continue button so that users don't get confused while navigating within the calendly embed
+    $('button[name="dXNlcl9zY2hlZHVsZWRfaW50ZXJ2aWV3"]').hide()
+    
+   // populate a javascript array with the python dict values collected in previous interview screens so that they can be used to prefill calendly fields
+    var the_vars;
+    get_interview_variables(function(data){
+    if (data.success){
+        the_vars = data.variables;
+        // initiate the calendly widget using prefill values from the_vars
+        Calendly.initInlineWidget({
+          url: 'https://calendly.com/metatheria?hide_landing_page_details=1',
+          prefill: {
+            name: the_vars["name"],
+            email: the_vars["email"],
+          }
+    });
+      }
+    });  
+  function isCalendlyEvent(e) {
+  return e.data.event &&
+         e.data.event.indexOf('calendly') === 0;
+  };
+ 
+  window.addEventListener(
+    'message',
+    function(e) {
+    if (isCalendlyEvent(e)) {
+      // console.log(e.data);
+      // since the docassemble "continue" button has been hidden from users so that they don't get confused, we need to listen for the calendly "event_scheduled" event indicating they succesfully scheduled an apt and then unhide the next button and advance the page.  
+      if(e.data.event == 'calendly.event_scheduled') {
+        $('button[name="dXNlcl9zY2hlZHVsZWRfaW50ZXJ2aWV3"]').show()
+        $('button[name="dXNlcl9zY2hlZHVsZWRfaW50ZXJ2aWV3"]').click()
+        }
+      }
+    }
+  );
+  </script>
+---
+question: |
+  You have reached the end of the
+  interview.
+subquestion: |
+  I hope you had a good time!
+sets: all_done
